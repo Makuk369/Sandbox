@@ -12,7 +12,12 @@ class Block:
         else:
             self.color = get_color_from_range(block_type["color"])
         self.density = block_type["density"]
-        self.stability = block_type["stability"]
+        if self.density < 500:
+            self.type = 1 #plyn
+        elif self.density < 1500:
+            self.type = 2 #tekutina
+        else:
+            self.type = 3 #pevne
         self.temperature = block_type["temperature"]
         self.thermal_conductivity = block_type["thermal_conductivity"]
         self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
@@ -63,40 +68,6 @@ class Block:
                     grid[ypos][xpos] = grid[ypos][xpos - 1]
                     grid[ypos][xpos - 1] = self
                     self.has_moved = True
-
-            elif not self.has_moved and tag == 3: # sticky-down
-                self.stability = block_types[list(block_types.keys())[grid[ypos][xpos].id]]["stability"] #resetne sa na defaultnu stabilitu
-                if (environment["wind"] > 0): #fuka vietor doprava
-                    for adjpos in close_adjacent:
-                        if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] >= 0): #ak neni v gridu, okrem spodku = skip
-                            self.stability =- 1
-                            continue
-                        grid[ypos - 1][xpos].stability = block_types[list(block_types.keys())[grid[ypos - 1][xpos].id]]["stability"] #reset neresetnutych blokov
-                        grid[ypos][xpos - 1].stability = block_types[list(block_types.keys())[grid[ypos][xpos - 1].id]]["stability"]
-                        if not (ypos + adjpos[0] <= grid_size[0]): #je na spodku
-                            self.stability += 10
-                            continue
-                        else:
-                            self.stability += grid[ypos + adjpos[0]][xpos + adjpos[1]].stability
-                if (environment["wind"] < 0): #fuka vietor dolava
-                    for adjpos in close_adjacent:
-                        if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] >= 0): #ak neni v gridu, okrem spodku = skip
-                            self.stability =- 1
-                            continue
-                        grid[ypos - 1][xpos].stability = block_types[list(block_types.keys())[grid[ypos - 1][xpos].id]]["stability"] #reset neresetnutych blokov
-                        grid[ypos][xpos + 1].stability = block_types[list(block_types.keys())[grid[ypos][xpos + 1].id]]["stability"]
-                        if not (ypos + adjpos[0] <= grid_size[0]): #je na spodku
-                            self.stability += 10
-                            continue
-                        else:
-                            self.stability += grid[ypos + adjpos[0]][xpos + adjpos[1]].stability
-                # print(self.stability)
-                if ypos + 1 <= grid_size[0]: #je dole grid
-                    if grid[ypos + 1][xpos].density < self.density: #je pod nim blok s mensiou hustotou
-                        if (self.stability) <= 0: #mala stabilita = spadne
-                            grid[ypos][xpos] = grid[ypos + 1][xpos]
-                            grid[ypos + 1][xpos] = self
-                            self.has_moved = True
 
             elif not self.has_moved and tag == 10: #up
                 if (ypos - 1 >= 0) and (grid[ypos - 1][xpos].density > self.density) and (grid[ypos - 1][xpos].density < 500): #je hore grid a plinovy blok s vacsiou hustotou

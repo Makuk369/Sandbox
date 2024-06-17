@@ -5,7 +5,6 @@
             [180, 185], [235, 240], [250, 255], 255
         ],
         "density": 10,
-        "stability": -2,
         "temperature": 20,
         "thermal_conductivity": 5,
         "melting_temp": null,
@@ -20,7 +19,6 @@
             [235, 245], [200, 215], [25, 50], 255
         ],
         "density": 1600,
-        "stability": 0,
         "temperature": 15,
         "thermal_conductivity": 50,
         "melting_temp": null,
@@ -39,14 +37,11 @@
             [130, 135], 130, 130, 255
         ],
         "density": 2500,
-        "stability": 2,
         "temperature": 10,
         "thermal_conductivity": 20,
         "melting_temp": null,
         "freezing_temp": null,
-        "movetags": [
-            3
-        ],
+        "movetags": [],
         "actiontags": [],
         "changesto": {}
     },
@@ -56,7 +51,6 @@
             [0, 5], [145, 160], [250, 255], 255
         ],
         "density": 1000,
-        "stability": -1,
         "temperature": 10,
         "thermal_conductivity": 10,
         "melting_temp": 100,
@@ -78,7 +72,6 @@
             [193, 201], [167, 179], [45, 65], 255
         ],
         "density": 1600,
-        "stability": 1,
         "temperature": 12,
         "thermal_conductivity": 40,
         "melting_temp": null,
@@ -95,7 +88,6 @@
             [75, 90], [210, 225], [250, 255], 255
         ],
         "density": 2500,
-        "stability": 0,
         "temperature": -1,
         "thermal_conductivity": 15,
         "melting_temp": 0,
@@ -114,7 +106,6 @@
             [205, 215], [250, 255], [250, 255], 255
         ],
         "density": 5,
-        "stability": -2,
         "temperature": 101,
         "thermal_conductivity": 25,
         "melting_temp": null,
