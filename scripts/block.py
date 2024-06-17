@@ -1,3 +1,5 @@
+import random
+
 from scripts.utils import get_color_from_range, load_from_json
 
 block_types = load_from_json("blockdata.json")
@@ -12,7 +14,12 @@ class Block:
         else:
             self.color = get_color_from_range(block_type["color"])
         self.density = block_type["density"]
-        self.stability = block_type["stability"]
+        if self.density < 500:
+            self.state = 1 #plyn
+        elif self.density < 1500:
+            self.state = 2 #tekutina
+        else:
+            self.state = 3 #pevne
         self.temperature = block_type["temperature"]
         self.thermal_conductivity = block_type["thermal_conductivity"]
         self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
@@ -28,78 +35,68 @@ class Block:
         for tag in self.movetags:
             if not self.has_moved and tag == 0: # down
                 if ypos + 1 <= grid_size[0]: #je dole grid
-                    if grid[ypos + 1][xpos].density < self.density: #je pod nim blok s mensiou hustotou
+                    if (self.state < 3) and (grid[ypos + 1][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
                         grid[ypos][xpos] = grid[ypos + 1][xpos] #vymeni seba za block do ktoreho pozicie ide
                         grid[ypos + 1][xpos] = self #da seba do cielovej pozicie
                         self.has_moved = True
+                    elif (self.state == 3) and (grid[ypos + 1][xpos].state != 3): #je pevny a nie je pod nim pevny blok
+                        grid[ypos][xpos] = grid[ypos + 1][xpos]
+                        grid[ypos + 1][xpos] = self
+                        self.has_moved = True
+
 
             elif not self.has_moved and tag == 1: # down side
                 if (ypos + 1 <= grid_size[0]): #je dole grid
                     if (environment["wind"] > 0): #fuka vietor doprava
-                        if (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
+                        if (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
                             grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
                             grid[ypos + 1][xpos + 1] = self
                             self.has_moved = True
-                        elif (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
+                        elif (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
+                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
+                            grid[ypos + 1][xpos - 1] = self
+                            self.has_moved = True
+                        #pevne
+                        if (self.state == 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3): #je napravo grid a napravo dole blok s mensiou hustotou
+                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
+                            grid[ypos + 1][xpos + 1] = self
+                            self.has_moved = True
+                        elif (self.state == 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3): #je vlavo grid a vlavo dole blok s mensiou hustotou
                             grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
                             grid[ypos + 1][xpos - 1] = self
                             self.has_moved = True
                     if (environment["wind"] < 0): #fuka vietor dolava
-                        if (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
+                        if (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
                             grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
                             grid[ypos + 1][xpos - 1] = self
                             self.has_moved = True
-                        elif (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
+                        elif (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
+                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
+                            grid[ypos + 1][xpos + 1] = self
+                            self.has_moved = True
+                        #pevne
+                        if (self.state == 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3): #je vlavo grid a vlavo dole blok s mensiou hustotou
+                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
+                            grid[ypos + 1][xpos - 1] = self
+                            self.has_moved = True
+                        elif (self.state == 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3): #je napravo grid a napravo dole blok s mensiou hustotou
                             grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
                             grid[ypos + 1][xpos + 1] = self
                             self.has_moved = True
 
-            elif not self.has_moved and tag == 2: # side-down
-                if (environment["wind"] > 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #je napravo grid a blok s mensiou hustotou
+            elif not self.has_moved and tag == 2: # side (down)
+                randnum = random.randint(0, 1)
+                if (randnum != 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #je napravo grid a blok s mensiou hustotou
                     grid[ypos][xpos] = grid[ypos][xpos + 1]
                     grid[ypos][xpos + 1] = self
                     self.has_moved = True
-                elif (environment["wind"] < 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #je vlavo grid a blok s mensiou hustotou
+                elif (randnum == 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #je vlavo grid a blok s mensiou hustotou
                     grid[ypos][xpos] = grid[ypos][xpos - 1]
                     grid[ypos][xpos - 1] = self
                     self.has_moved = True
 
-            elif not self.has_moved and tag == 3: # sticky-down
-                self.stability = block_types[list(block_types.keys())[grid[ypos][xpos].id]]["stability"] #resetne sa na defaultnu stabilitu
-                if (environment["wind"] > 0): #fuka vietor doprava
-                    for adjpos in close_adjacent:
-                        if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] >= 0): #ak neni v gridu, okrem spodku = skip
-                            self.stability =- 1
-                            continue
-                        grid[ypos - 1][xpos].stability = block_types[list(block_types.keys())[grid[ypos - 1][xpos].id]]["stability"] #reset neresetnutych blokov
-                        grid[ypos][xpos - 1].stability = block_types[list(block_types.keys())[grid[ypos][xpos - 1].id]]["stability"]
-                        if not (ypos + adjpos[0] <= grid_size[0]): #je na spodku
-                            self.stability += 10
-                            continue
-                        else:
-                            self.stability += grid[ypos + adjpos[0]][xpos + adjpos[1]].stability
-                if (environment["wind"] < 0): #fuka vietor dolava
-                    for adjpos in close_adjacent:
-                        if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] >= 0): #ak neni v gridu, okrem spodku = skip
-                            self.stability =- 1
-                            continue
-                        grid[ypos - 1][xpos].stability = block_types[list(block_types.keys())[grid[ypos - 1][xpos].id]]["stability"] #reset neresetnutych blokov
-                        grid[ypos][xpos + 1].stability = block_types[list(block_types.keys())[grid[ypos][xpos + 1].id]]["stability"]
-                        if not (ypos + adjpos[0] <= grid_size[0]): #je na spodku
-                            self.stability += 10
-                            continue
-                        else:
-                            self.stability += grid[ypos + adjpos[0]][xpos + adjpos[1]].stability
-                # print(self.stability)
-                if ypos + 1 <= grid_size[0]: #je dole grid
-                    if grid[ypos + 1][xpos].density < self.density: #je pod nim blok s mensiou hustotou
-                        if (self.stability) <= 0: #mala stabilita = spadne
-                            grid[ypos][xpos] = grid[ypos + 1][xpos]
-                            grid[ypos + 1][xpos] = self
-                            self.has_moved = True
-
             elif not self.has_moved and tag == 10: #up
-                if (ypos - 1 >= 0) and (grid[ypos - 1][xpos].density > self.density) and (grid[ypos - 1][xpos].density < 500): #je hore grid a plinovy blok s vacsiou hustotou
+                if (ypos - 1 >= 0) and (grid[ypos - 1][xpos].density > self.density) and (grid[ypos - 1][xpos].state == 1): #je hore grid a plinovy blok s vacsiou hustotou
                     grid[ypos][xpos] = grid[ypos - 1][xpos] #vymeni seba za block do ktoreho pozicie ide
                     grid[ypos - 1][xpos] = self #da seba do cielovej pozicie
                     self.has_moved = True
@@ -107,30 +104,31 @@ class Block:
             elif not self.has_moved and tag == 11: # up side
                 if (ypos - 1 >= 0): #je hore grid
                     if (environment["wind"] > 0): #fuka vietor doprava
-                        if (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].density < 500): #je napravo grid a napravo hore blok s vacsiou hustotou
+                        if (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].state == 1): #je napravo grid a napravo hore blok s vacsiou hustotou
                             grid[ypos][xpos] = grid[ypos - 1][xpos + 1]
                             grid[ypos - 1][xpos + 1] = self
                             self.has_moved = True
-                        elif (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].density < 500): #je vlavo grid a vlavo hore blok s vacsiou hustotou
+                        elif (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].state == 1): #je vlavo grid a vlavo hore blok s vacsiou hustotou
                             grid[ypos][xpos] = grid[ypos - 1][xpos - 1]
                             grid[ypos - 1][xpos - 1] = self
                             self.has_moved = True
                     if (environment["wind"] < 0): #fuka vietor dolava
-                        if (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].density < 500): #je vlavo grid a vlavo hore blok s vacsiou hustotou
+                        if (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].state == 1): #je vlavo grid a vlavo hore blok s vacsiou hustotou
                             grid[ypos][xpos] = grid[ypos - 1][xpos - 1]
                             grid[ypos - 1][xpos - 1] = self
                             self.has_moved = True
-                        elif (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].density < 500): #je napravo grid a napravo hore blok s vacsiou hustotou
+                        elif (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].state == 1): #je napravo grid a napravo hore blok s vacsiou hustotou
                             grid[ypos][xpos] = grid[ypos - 1][xpos + 1]
                             grid[ypos - 1][xpos + 1] = self
                             self.has_moved = True
 
-            elif not self.has_moved and tag == 12: # side-up
-                if (environment["wind"] > 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density > self.density) and (grid[ypos][xpos + 1].density < 500): #je napravo grid a plinovy blok s vacsiou hustotou
+            elif not self.has_moved and tag == 12: # side (up)
+                randnum = random.randint(0, 1)
+                if (randnum != 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density > self.density) and (grid[ypos][xpos + 1].state == 1): #je napravo grid a plinovy blok s vacsiou hustotou
                     grid[ypos][xpos] = grid[ypos][xpos + 1]
                     grid[ypos][xpos + 1] = self
                     self.has_moved = True
-                elif (environment["wind"] < 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density > self.density) and (grid[ypos][xpos - 1].density < 500): #je vlavo grid a plinovy blok s vacsiou hustotou
+                elif (randnum == 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density > self.density) and (grid[ypos][xpos - 1].state == 1): #je vlavo grid a plinovy blok s vacsiou hustotou
                     grid[ypos][xpos] = grid[ypos][xpos - 1]
                     grid[ypos][xpos - 1] = self
                     self.has_moved = True

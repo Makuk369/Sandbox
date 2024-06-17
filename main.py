@@ -118,7 +118,7 @@ while True:
         info_texts = [str(f"ID: {block_types[hovered_block]["id"]}\n"),
                       str(f"Density: {block_types[hovered_block]["density"]}"),
                       str(f"Temperature: {"%.2f" % logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].temperature} °C"),
-                      str(f"Stability: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].stability}")
+                      str(f"Type: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].state}")
                       ]
         
         longest_text = len(hovered_block)
