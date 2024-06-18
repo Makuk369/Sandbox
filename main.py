@@ -1,7 +1,6 @@
 import sys
 import pygame
 import random
-import math
 
 from scripts import utils
 from scripts.logic import LogicGrid
