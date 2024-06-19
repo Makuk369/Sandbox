@@ -11,13 +11,13 @@ HEIGHT = 720 #9
 SCALE = 10
 WIDTH_S = WIDTH // SCALE
 HEIGHT_S = HEIGHT // SCALE
-GAME_SPEED = 30 #fps
+GAME_SPEED = 5 #fps
 
 show_fps = True
 
 pygame.init()
 window = pygame.display.set_mode((WIDTH, HEIGHT)) 
-surface_s = pygame.Surface((WIDTH_S, HEIGHT_S))
+surface_s = pygame.Surface((WIDTH_S, HEIGHT_S)) #128, 72
 
 clock = pygame.time.Clock()
 
@@ -53,7 +53,7 @@ selected_block = "sand"
 
 block_types = utils.load_from_json("blockdata.json")
 
-logic_grid = LogicGrid(WIDTH_S, HEIGHT_S - (HEIGHT_S // 10), Block(block_types["air"]))
+logic_grid = LogicGrid(WIDTH_S, HEIGHT_S - (HEIGHT_S // 10), Block(block_types["air"])) #127, 63
 
 block_buttons = []
 xpos = 20

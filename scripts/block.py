@@ -25,6 +25,7 @@ class Block:
         self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
         self.movetags = block_type["movetags"]
         self.has_moved = False
+        self.is_moving = True #pre inertia, zastavy kazdy iny pohyb okrem zakladneho = dole, hore
         self.actiontags = block_type["actiontags"]
         self.has_made_action = False
         self.changesto = block_type["changesto"]
@@ -32,17 +33,29 @@ class Block:
     def move(self, grid, xpos, ypos, environment):
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
         
+
         for tag in self.movetags:
-            if not self.has_moved and tag == 0: # down
-                if ypos + 1 <= grid_size[0]: #je dole grid
-                    if (self.state < 3) and (grid[ypos + 1][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
-                        grid[ypos][xpos] = grid[ypos + 1][xpos] #vymeni seba za block do ktoreho pozicie ide
-                        grid[ypos + 1][xpos] = self #da seba do cielovej pozicie
-                        self.has_moved = True
-                    elif (self.state == 3) and (grid[ypos + 1][xpos].state != 3): #je pevny a nie je pod nim pevny blok
-                        grid[ypos][xpos] = grid[ypos + 1][xpos]
-                        grid[ypos + 1][xpos] = self
-                        self.has_moved = True
+            if not self.has_moved and tag == 0 and self.is_moving: # down !!! is_moving potom dat prec !!!
+                next_positions = self.calc_pos_check((xpos, ypos), (xpos, ypos + 2))
+                print("next frame")
+                for next_pos in next_positions:
+                    if ypos + next_pos[1] <= grid_size[0]: #je dole grid
+                        if (self.state < 3) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
+                            grid[ypos][xpos] = grid[ypos + next_pos[1]][xpos] #vymeni seba za block do ktoreho pozicie ide
+                            grid[ypos + next_pos[1]][xpos] = self #da seba do cielovej pozicie
+                            self.has_moved = True
+                        elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos].state != 3): #je pevny a nie je pod nim pevny blok
+                            final_pos = next_pos
+                        else:
+                            print("break")
+                            break
+                try:
+                    grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos]
+                    grid[ypos + final_pos[1]][xpos] = self
+                    self.has_moved = True
+                except UnboundLocalError:
+                    print("e")
+                    self.is_moving = False
 
 
             elif not self.has_moved and tag == 1: # down side
@@ -176,3 +189,48 @@ class Block:
                         new_block.temperature = environment["temperature"]
                         grid[ypos][xpos] = new_block
                         self.has_made_action = True
+
+    def calc_pos_check(self, start_pos: tuple, end_pos: tuple) -> list:
+        start = start_pos
+        end = end_pos
+
+        x_len = end[0] - start[0]
+        y_len = end[1] - start[1]
+
+        positions_to_check = []
+
+        if abs(x_len) > abs(y_len): #ide cez x
+            if x_len != 0:
+                slope = y_len / x_len
+            else:
+                slope = y_len / 1
+            # print("slope:",slope)
+
+            if x_len > 0:
+                for x in range(1, x_len + 1):
+                    positions_to_check.append((x, round(slope * x)))
+
+                    # print(f"X: {x} Y: {round(slope * x)}   {slope * x}")
+            else:
+                for x in range(-1, x_len - 1, -1):
+                    positions_to_check.append((x, round(slope * x)))
+
+                    # print(f"X: {x} Y: {round(slope * x)}   {slope * x}")
+        else: #ide cez y
+            if y_len != 0:
+                slope = x_len / y_len
+            else:
+                slope = x_len / 1
+            # print("slope:",slope)
+
+            if y_len > 0:
+                for y in range(1, y_len + 1):
+                    positions_to_check.append((round(slope * y), y))
+
+                    # print(f"X: {round(slope * y)} Y: {y}  {slope * y}")
+            else:
+                for y in range(-1, y_len - 1, -1):
+                    positions_to_check.append((round(slope * y), y))
+
+                    # print(f"X: {round(slope * y)} Y: {y}  {slope * y}")
+        return positions_to_check
