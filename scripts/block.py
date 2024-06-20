@@ -1,3 +1,4 @@
+import math
 import random
 
 from scripts.utils import get_color_from_range, load_from_json
@@ -23,7 +24,9 @@ class Block:
         self.temperature = block_type["temperature"]
         self.thermal_conductivity = block_type["thermal_conductivity"]
         self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
-        self.movetags = block_type["movetags"]
+        self.movetags = block_type["movetags"] # !!!! RM !!!!
+        self.velocity = (0, 0)
+        self.friction = block_type["friction"]
         self.has_moved = False
         self.is_moving = True #pre inertia, zastavy kazdy iny pohyb okrem zakladneho = dole, hore
         self.actiontags = block_type["actiontags"]
@@ -31,32 +34,38 @@ class Block:
         self.changesto = block_type["changesto"]
 
     def move(self, grid, xpos, ypos, environment):
-        grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
+        if len(self.movetags) == 0: #ak nic neroby skonci
+            return
         
+        grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
+
+        if self.is_moving or ((ypos + 1 <= grid_size[0]) and (grid[ypos + 1][xpos].state != 3) and (grid[ypos + 1][xpos].density < self.density)): #moze sa hybat alebo nieje dole blok
+            self.velocity = (self.velocity[0], self.velocity[1] + environment["gravity"]) #x, y (kolko blokov sa pohne za frame)
+        else: #nemoze sa hybat alebo je dole blok
+            self.velocity = (0, 0)
+            return
+
+        next_positions = self.calc_pos_check((xpos, ypos), (xpos + self.velocity[0], ypos + self.velocity[1]))
 
         for tag in self.movetags:
-            if not self.has_moved and tag == 0 and self.is_moving: # down !!! is_moving potom dat prec !!!
-                next_positions = self.calc_pos_check((xpos, ypos), (xpos, ypos + 2))
-                print("next frame")
+            if not self.has_moved and tag == 0: # down !!!!! tag zmenit na self.velocity[0] == 0
                 for next_pos in next_positions:
                     if ypos + next_pos[1] <= grid_size[0]: #je dole grid
                         if (self.state < 3) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + next_pos[1]][xpos] #vymeni seba za block do ktoreho pozicie ide
-                            grid[ypos + next_pos[1]][xpos] = self #da seba do cielovej pozicie
-                            self.has_moved = True
+                            final_pos = next_pos
                         elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos].state != 3): #je pevny a nie je pod nim pevny blok
                             final_pos = next_pos
-                        else:
-                            print("break")
+                        else: #dopadol
+                            self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))), 0))
                             break
                 try:
-                    grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos]
-                    grid[ypos + final_pos[1]][xpos] = self
+                    grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos] #vymeni seba za block do ktoreho pozicie ide
+                    grid[ypos + final_pos[1]][xpos] = self #da seba do cielovej pozicie
                     self.has_moved = True
                 except UnboundLocalError:
-                    print("e")
                     self.is_moving = False
 
+            #dat krivi movement
 
             elif not self.has_moved and tag == 1: # down side
                 if (ypos + 1 <= grid_size[0]): #je dole grid
@@ -190,10 +199,7 @@ class Block:
                         grid[ypos][xpos] = new_block
                         self.has_made_action = True
 
-    def calc_pos_check(self, start_pos: tuple, end_pos: tuple) -> list:
-        start = start_pos
-        end = end_pos
-
+    def calc_pos_check(self, start: tuple, end: tuple) -> list:
         x_len = end[0] - start[0]
         y_len = end[1] - start[1]
 

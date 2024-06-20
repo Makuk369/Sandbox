@@ -1,6 +1,7 @@
 import sys
 import pygame
 import random
+import time
 
 from scripts import utils
 from scripts.logic import LogicGrid
@@ -11,7 +12,7 @@ HEIGHT = 720 #9
 SCALE = 10
 WIDTH_S = WIDTH // SCALE
 HEIGHT_S = HEIGHT // SCALE
-GAME_SPEED = 5 #fps
+GAME_SPEED = 30 #fps
 
 show_fps = True
 
@@ -46,6 +47,7 @@ down_button = utils.Button(True, down_arrow, (WIDTH - down_arrow.get_width(), HE
 environment = {
     "temperature": 90,
     "wind": 0,
+    "gravity": 1
 }
 env_i = 0
 
@@ -95,8 +97,12 @@ while True:
 
 
     # ----- Update blocks -----
+    # start = time.perf_counter()
     logic_grid.update(environment)
+    # start2 = time.perf_counter()
     logic_grid.draw(surface_s)
+    # end = time.perf_counter()
+    # print(f"update: {start2 - start}, draw: {end - start2}")
 
     #----- Input -----
     mouse_pos = pygame.mouse.get_pos()

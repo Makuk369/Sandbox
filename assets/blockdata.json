@@ -10,6 +10,7 @@
         "melting_temp": null,
         "freezing_temp": null,
         "movetags": [],
+        "friction": 0.05,
         "actiontags": [],
         "changesto": {}
     },
@@ -26,6 +27,7 @@
         "movetags": [
             0, 1
         ],
+        "friction": 0.5,
         "actiontags": [],
         "changesto": {
             "0": "wetsand"
@@ -42,6 +44,7 @@
         "melting_temp": null,
         "freezing_temp": null,
         "movetags": [],
+        "friction": 1,
         "actiontags": [],
         "changesto": {}
     },
@@ -58,6 +61,7 @@
         "movetags": [
             0, 1, 2
         ],
+        "friction": 0.25,
         "actiontags": [
             0, 1, 2
         ],
@@ -79,6 +83,7 @@
         "movetags": [
             0
         ],
+        "friction": 0.8,
         "actiontags": [],
         "changesto": {}
     },
@@ -93,6 +98,7 @@
         "melting_temp": 0,
         "freezing_temp": null,
         "movetags": [],
+        "friction": 1,
         "actiontags": [
             2
         ],
@@ -113,6 +119,7 @@
         "movetags": [
             10, 11, 12
         ],
+        "friction": 0.1,
         "actiontags": [
             1
         ],
