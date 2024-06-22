@@ -11,20 +11,12 @@ class LogicGrid:
         self.grid = [[self.fill_block for x in range(self.width)] for y in range(self.height)]
 
     def update(self, environment):
-        if environment["wind"] > 0:
-            for y in range(self.height - 1, -1, -1): # koncove treba o -1 zmensit
-                for x in range(self.width - 1, -1, -1): 
-                    if self.grid[y][x].has_moved:
-                        continue
-                    self.grid[y][x].action(self.grid, x, y, environment)
-                    self.grid[y][x].move(self.grid, x, y, environment)
-        else:
-            for y in range(self.height - 1, -1, -1):
-                for x in range(self.width):
-                    if self.grid[y][x].has_moved:
-                        continue
-                    self.grid[y][x].action(self.grid, x, y, environment)
-                    self.grid[y][x].move(self.grid, x, y, environment)
+        for y in range(self.height - 1, -1, -1): # koncove treba o -1 zmensit
+            for x in range(self.width - 1, -1, -1): 
+                if self.grid[y][x].has_moved:
+                    continue
+                self.grid[y][x].action(self.grid, x, y, environment)
+                self.grid[y][x].move(self.grid, x, y, environment)
 
     def draw(self, surface):
         for y in range(self.height):

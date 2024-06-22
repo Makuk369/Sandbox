@@ -1,7 +1,7 @@
 import math
 import random
 
-from scripts.utils import get_color_from_range, load_from_json
+from scripts.utils import get_color_from_range, load_from_json, move_to_zero
 
 block_types = load_from_json("blockdata.json")
 
@@ -24,9 +24,9 @@ class Block:
         self.temperature = block_type["temperature"]
         self.thermal_conductivity = block_type["thermal_conductivity"]
         self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
-        self.movetags = block_type["movetags"] # !!!! RM !!!!
         self.velocity = (0, 0)
         self.friction = block_type["friction"]
+        self.can_move = block_type["can_move"]
         self.has_moved = False
         self.is_moving = True #pre inertia, zastavy kazdy iny pohyb okrem zakladneho = dole, hore
         self.actiontags = block_type["actiontags"]
@@ -34,39 +34,100 @@ class Block:
         self.changesto = block_type["changesto"]
 
     def move(self, grid, xpos, ypos, environment):
-        if len(self.movetags) == 0: #ak nic neroby skonci
+        if not self.can_move: #ak sa nevie hybat
             return
         
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
 
+        # ----- vypocet velocity -----
         if self.is_moving or ((ypos + 1 <= grid_size[0]) and (grid[ypos + 1][xpos].state != 3) and (grid[ypos + 1][xpos].density < self.density)): #moze sa hybat alebo nieje dole blok
-            self.velocity = (self.velocity[0], self.velocity[1] + environment["gravity"]) #x, y (kolko blokov sa pohne za frame)
-        else: #nemoze sa hybat alebo je dole blok
+            if (random.randint(0, 100) - random.randint(0, 100)) > (self.friction * 100): #odfukne vietor
+                self.velocity = (self.velocity[0] + random.randint(-1, 1), self.velocity[1] + environment["gravity"]) #x, y (kolko blokov sa pohne za frame)
+            elif (random.randint(0, 100)) < (self.friction * 100): #prestava sa smikat
+                self.velocity = (round(move_to_zero(self.velocity[0], 2, True)), self.velocity[1] + environment["gravity"])
+            else: #smika sa = zachova svoj pohyb do boku
+                self.velocity = (self.velocity[0], self.velocity[1] + environment["gravity"])
+        # elif self.is_moving and ((grid[ypos + 1][xpos].state == 3) and (grid[ypos + 1][xpos].density > self.density)): #moze sa hybat a dole je blok
+        #     if (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
+        #         self.velocity = (1, 1)
+        #     elif (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
+        #         self.velocity = (-1, 1)
+        else: #nemoze sa hybat
             self.velocity = (0, 0)
             return
+        
+        # print("vel", self.velocity)
 
+        # ----- pohyb -----
         next_positions = self.calc_pos_check((xpos, ypos), (xpos + self.velocity[0], ypos + self.velocity[1]))
-
-        for tag in self.movetags:
-            if not self.has_moved and tag == 0: # down !!!!! tag zmenit na self.velocity[0] == 0
-                for next_pos in next_positions:
-                    if ypos + next_pos[1] <= grid_size[0]: #je dole grid
-                        if (self.state < 3) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
-                            final_pos = next_pos
-                        elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos].state != 3): #je pevny a nie je pod nim pevny blok
-                            final_pos = next_pos
-                        else: #dopadol
-                            self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))), 0))
-                            break
-                try:
-                    grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos] #vymeni seba za block do ktoreho pozicie ide
-                    grid[ypos + final_pos[1]][xpos] = self #da seba do cielovej pozicie
-                    self.has_moved = True
-                except UnboundLocalError:
+        # print("next pos", next_positions)
+        if not self.has_moved and self.velocity[0] == 0: # iba dole
+            for next_pos in next_positions:
+                if ypos + next_pos[1] <= grid_size[0]: #je dole grid
+                    if (self.state < 3) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
+                        final_pos = next_pos
+                    elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos].state != 3): #je pevny a nie je pod nim pevny blok
+                        final_pos = next_pos
+                    else: #dopadol
+                        self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
+                        # print("dopadol", self.velocity)
+                        break
+                else: #dopadol na spodok gridu
+                    self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
+                    # print("dopadol g", self.velocity)
+                    break
+            try:
+                grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos] #vymeni seba za block do ktoreho pozicie ide
+                grid[ypos + final_pos[1]][xpos] = self #da seba do cielovej pozicie
+                for adjpos in close_adjacent:
+                    if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] <= grid_size[0]) or not (ypos + adjpos[0] >= 0): #ak neni v gridu = skip
+                        continue
+                    grid[ypos + adjpos[0]][xpos + adjpos[1]].is_moving = True #nastavenie okolnych blokov aby sa mohli hybat
+                self.has_moved = True
+            except UnboundLocalError:
+                if self.velocity == (0, 0):
                     self.is_moving = False
+                    # print("stop")
+                else:
+                    pass
+                    # print("no stop")
 
-            #dat krivi movement
-
+        elif not self.has_moved: # krivo dole
+            for next_pos in next_positions:
+                if (ypos + next_pos[1] <= grid_size[0]) and (xpos + next_pos[0] <= grid_size[1]) and (xpos + next_pos[0] >= 0): #je v gride
+                    if (self.state < 3) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].density < self.density): #je tekutina alebo plyn a dalsi blok ma mensiu hustotu
+                        final_pos = next_pos
+                    elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].state != 3): #je pevny a dalsi blok nie je pevny blok
+                        final_pos = next_pos
+                    else: #dopadol
+                        self.velocity = ((self.velocity[0] + math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
+                        # print("dopadol2", self.velocity)
+                        break
+                elif ((xpos + next_pos[0] > grid_size[1]) or (xpos + next_pos[0] < 0)): #napravo alebo nalavo neni grid
+                    self.velocity = (0, self.velocity[1])
+                    # print("odraz", self.velocity)
+                    break
+                else: #dopadol na spodok gridu
+                    self.velocity = ((self.velocity[0] + math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
+                    # print("dopadol2 g", self.velocity)
+                    break
+            try:
+                grid[ypos][xpos] = grid[ypos + final_pos[1]][xpos + final_pos[0]] #vymeni seba za block do ktoreho pozicie ide
+                grid[ypos + final_pos[1]][xpos + final_pos[0]] = self #da seba do cielovej pozicie
+                for adjpos in close_adjacent:
+                    if not (xpos + adjpos[1] <= grid_size[1]) or not (xpos + adjpos[1] >= 0) or not (ypos + adjpos[0] <= grid_size[0]) or not (ypos + adjpos[0] >= 0): #ak neni v gridu = skip
+                        continue
+                    grid[ypos + adjpos[0]][xpos + adjpos[1]].is_moving = True #nastavenie okolnych blokov aby sa mohli hybat
+                self.has_moved = True
+            except UnboundLocalError:
+                if self.velocity == (0, 0):
+                    self.is_moving = False
+                    # print("stop2")
+                else:
+                    pass
+                    # print("no stop")
+        
+    """
             elif not self.has_moved and tag == 1: # down side
                 if (ypos + 1 <= grid_size[0]): #je dole grid
                     if (environment["wind"] > 0): #fuka vietor doprava
@@ -154,7 +215,7 @@ class Block:
                     grid[ypos][xpos] = grid[ypos][xpos - 1]
                     grid[ypos][xpos - 1] = self
                     self.has_moved = True
-
+    """
     def action(self, grid, xpos, ypos, environment):
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
 

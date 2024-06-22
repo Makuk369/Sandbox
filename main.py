@@ -12,7 +12,7 @@ HEIGHT = 720 #9
 SCALE = 10
 WIDTH_S = WIDTH // SCALE
 HEIGHT_S = HEIGHT // SCALE
-GAME_SPEED = 30 #fps
+GAME_SPEED = 10 #fps
 
 show_fps = True
 
@@ -75,7 +75,7 @@ variant = block_types[selected_block]["id"]
 while True:
     env_i += 1
     if env_i == GAME_SPEED:
-        environment["wind"] = random.choice((-1, 1))
+        # environment["wind"] = random.choice((-1, 0, 1))
         # print(environment["wind"])
         env_i -= GAME_SPEED
     
@@ -114,6 +114,7 @@ while True:
 
     if is_mouseL_held and not is_block_menu_open and (0 <= mouse_pos_s[0] <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] <= logic_grid.height - 1):
         logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]] = Block(block_types[selected_block])
+        # print("NEW BLOCK")
     
     if is_mouseR_held and not is_block_menu_open and (0 <= mouse_pos_s[0] <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] <= logic_grid.height - 1):
         
@@ -123,7 +124,7 @@ while True:
         info_texts = [str(f"ID: {block_types[hovered_block]["id"]}\n"),
                       str(f"Density: {block_types[hovered_block]["density"]}"),
                       str(f"Temperature: {"%.2f" % logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].temperature} °C"),
-                      str(f"Type: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].state}")
+                      str(f"Is moving: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].is_moving}")
                       ]
         
         longest_text = len(hovered_block)

@@ -38,6 +38,22 @@ def get_color_from_range(color_range, is_grayscale = False):
 def debug_rect(surface, rect, color = (255, 0, 0)):
     pygame.draw.rect(surface, color, rect, 2)
 
+def move_to_zero(start, step, portion = False) -> int | float:
+    if portion:
+        if start > 0:
+            return start - (start / step)
+        elif start < 0:
+            return start + abs(start / step)
+        else:
+            return 0
+    else:
+        if start > 0:
+            return start - step
+        elif start < 0:
+            return start + step
+        else:
+            return 0
+
 class Button():
     def __init__(self, return_on_press, image, rect):
         self.on_press = return_on_press
