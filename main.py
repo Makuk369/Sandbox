@@ -12,7 +12,7 @@ HEIGHT = 720 #9
 SCALE = 10
 WIDTH_S = WIDTH // SCALE
 HEIGHT_S = HEIGHT // SCALE
-GAME_SPEED = 10 #fps
+GAME_SPEED = 30 #fps
 
 show_fps = True
 
@@ -46,7 +46,6 @@ down_button = utils.Button(True, down_arrow, (WIDTH - down_arrow.get_width(), HE
 
 environment = {
     "temperature": 90,
-    "wind": 0,
     "gravity": 1
 }
 env_i = 0
@@ -73,11 +72,6 @@ is_block_menu_open = False
 variant = block_types[selected_block]["id"]
 
 while True:
-    env_i += 1
-    if env_i == GAME_SPEED:
-        # environment["wind"] = random.choice((-1, 0, 1))
-        # print(environment["wind"])
-        env_i -= GAME_SPEED
     
     # ----- UI -----
     if is_block_menu_open:
