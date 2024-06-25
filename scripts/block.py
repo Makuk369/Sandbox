@@ -64,10 +64,31 @@ class Block:
                     self.velocity = (-1, 1)
                 else:
                     self.velocity = (self.velocity[0], abs(self.velocity[0]))
-        #     if (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
-        #         self.velocity = (1, 1)
-        #     elif (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
-        #         self.velocity = (-1, 1)
+
+        elif (self.state < 3): #moze sa hybat a nieje pevny
+            if (self.velocity[0] >= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide doprava a napravo nieje blok
+                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                    self.velocity = (self.velocity[0] + 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                else:
+                    self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+            elif (self.velocity[0] >= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide doprava ale napravo je blok = odrazi sa
+                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                    self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                else:
+                    self.velocity = (-1, 0)
+            elif (self.velocity[0] <= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide dolava a nalavo nieje blok
+                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                    self.velocity = (self.velocity[0] - 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                else:
+                    self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+            elif (self.velocity[0] <= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide dolava ale nalavo je blok = odrazi sa
+                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                    self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                else:
+                    self.velocity = (1, 0)
+            else:
+                self.velocity = (0, 0)
+
         else: #nemoze sa hybat (aj ked ma velocity)
             self.velocity = (0, 0)
             self.is_moving = False
@@ -148,95 +169,6 @@ class Block:
                     pass
                     # print("no stop")
         
-    """
-            elif not self.has_moved and tag == 1: # down side
-                if (ypos + 1 <= grid_size[0]): #je dole grid
-                    if (environment["wind"] > 0): #fuka vietor doprava
-                        if (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
-                            grid[ypos + 1][xpos + 1] = self
-                            self.has_moved = True
-                        elif (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
-                            grid[ypos + 1][xpos - 1] = self
-                            self.has_moved = True
-                        #pevne
-                        if (self.state == 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3): #je napravo grid a napravo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
-                            grid[ypos + 1][xpos + 1] = self
-                            self.has_moved = True
-                        elif (self.state == 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3): #je vlavo grid a vlavo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
-                            grid[ypos + 1][xpos - 1] = self
-                            self.has_moved = True
-                    if (environment["wind"] < 0): #fuka vietor dolava
-                        if (self.state < 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].density < self.density): #je vlavo grid a vlavo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
-                            grid[ypos + 1][xpos - 1] = self
-                            self.has_moved = True
-                        elif (self.state < 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].density < self.density): #je napravo grid a napravo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
-                            grid[ypos + 1][xpos + 1] = self
-                            self.has_moved = True
-                        #pevne
-                        if (self.state == 3) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3): #je vlavo grid a vlavo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos - 1]
-                            grid[ypos + 1][xpos - 1] = self
-                            self.has_moved = True
-                        elif (self.state == 3) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3): #je napravo grid a napravo dole blok s mensiou hustotou
-                            grid[ypos][xpos] = grid[ypos + 1][xpos + 1]
-                            grid[ypos + 1][xpos + 1] = self
-                            self.has_moved = True
-
-            elif not self.has_moved and tag == 2: # side (down)
-                randnum = random.randint(0, 1)
-                if (randnum != 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #je napravo grid a blok s mensiou hustotou
-                    grid[ypos][xpos] = grid[ypos][xpos + 1]
-                    grid[ypos][xpos + 1] = self
-                    self.has_moved = True
-                elif (randnum == 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #je vlavo grid a blok s mensiou hustotou
-                    grid[ypos][xpos] = grid[ypos][xpos - 1]
-                    grid[ypos][xpos - 1] = self
-                    self.has_moved = True
-
-            elif not self.has_moved and tag == 10: #up
-                if (ypos - 1 >= 0) and (grid[ypos - 1][xpos].density > self.density) and (grid[ypos - 1][xpos].state == 1): #je hore grid a plinovy blok s vacsiou hustotou
-                    grid[ypos][xpos] = grid[ypos - 1][xpos] #vymeni seba za block do ktoreho pozicie ide
-                    grid[ypos - 1][xpos] = self #da seba do cielovej pozicie
-                    self.has_moved = True
-
-            elif not self.has_moved and tag == 11: # up side
-                if (ypos - 1 >= 0): #je hore grid
-                    if (environment["wind"] > 0): #fuka vietor doprava
-                        if (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].state == 1): #je napravo grid a napravo hore blok s vacsiou hustotou
-                            grid[ypos][xpos] = grid[ypos - 1][xpos + 1]
-                            grid[ypos - 1][xpos + 1] = self
-                            self.has_moved = True
-                        elif (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].state == 1): #je vlavo grid a vlavo hore blok s vacsiou hustotou
-                            grid[ypos][xpos] = grid[ypos - 1][xpos - 1]
-                            grid[ypos - 1][xpos - 1] = self
-                            self.has_moved = True
-                    if (environment["wind"] < 0): #fuka vietor dolava
-                        if (xpos - 1 >= 0) and (grid[ypos - 1][xpos - 1].density > self.density) and (grid[ypos - 1][xpos - 1].state == 1): #je vlavo grid a vlavo hore blok s vacsiou hustotou
-                            grid[ypos][xpos] = grid[ypos - 1][xpos - 1]
-                            grid[ypos - 1][xpos - 1] = self
-                            self.has_moved = True
-                        elif (xpos + 1 <= grid_size[1]) and (grid[ypos - 1][xpos + 1].density > self.density) and (grid[ypos - 1][xpos + 1].state == 1): #je napravo grid a napravo hore blok s vacsiou hustotou
-                            grid[ypos][xpos] = grid[ypos - 1][xpos + 1]
-                            grid[ypos - 1][xpos + 1] = self
-                            self.has_moved = True
-
-            elif not self.has_moved and tag == 12: # side (up)
-                randnum = random.randint(0, 1)
-                if (randnum != 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density > self.density) and (grid[ypos][xpos + 1].state == 1): #je napravo grid a plinovy blok s vacsiou hustotou
-                    grid[ypos][xpos] = grid[ypos][xpos + 1]
-                    grid[ypos][xpos + 1] = self
-                    self.has_moved = True
-                elif (randnum == 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density > self.density) and (grid[ypos][xpos - 1].state == 1): #je vlavo grid a plinovy blok s vacsiou hustotou
-                    grid[ypos][xpos] = grid[ypos][xpos - 1]
-                    grid[ypos][xpos - 1] = self
-                    self.has_moved = True
-    """
     def action(self, grid, xpos, ypos, environment):
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
 
