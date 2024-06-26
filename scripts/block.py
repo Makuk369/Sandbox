@@ -40,54 +40,90 @@ class Block:
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width
 
         # ----- vypocet velocity -----
-        if (ypos + 1 <= grid_size[0]) and (grid[ypos + 1][xpos].state != 3) and (grid[ypos + 1][xpos].density < self.density): #dole nieje blok
-            self.is_moving = True
-            if random.randint(0, 100) < (self.friction * 100): #prestava sa smikat
-                self.velocity = (round(move_to_num(self.velocity[0], 0, 2, True)), self.velocity[1] + environment["gravity"])
-            else: #smika sa = zachova svoj pohyb do boku
-                self.velocity = (self.velocity[0], self.velocity[1] + environment["gravity"])
+        if self.state > 1: #nieje plyn
+            if (ypos + 1 <= grid_size[0]) and (grid[ypos + 1][xpos].state != 3) and (grid[ypos + 1][xpos].density < self.density): #dole nieje blok
+                self.is_moving = True
+                if random.randint(0, 100) < (self.friction * 100): #prestava sa smikat
+                    self.velocity = (round(move_to_num(self.velocity[0], 0, 2, True)), self.velocity[1] + environment["gravity"])
+                else: #smika sa = zachova svoj pohyb do boku
+                    self.velocity = (self.velocity[0], self.velocity[1] + environment["gravity"])
 
-        elif self.is_moving and (self.velocity[0] >= 0) and (ypos + 1 <= grid_size[0]) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3) and (grid[ypos + 1][xpos + 1].density < self.density): #moze sa hybat a dole napravo nieje blok
-            if (random.randint(0, 100)) < (self.friction * 100): #prestava sa smikat
-                self.velocity = (move_to_num(self.velocity[0], 0, 1), move_to_num(self.velocity[0], 0, 1))
-            else:
-                if (self.velocity[0] == 0) and (random.randint(0, 100) > (self.friction * 100)):
-                    self.velocity = (1, 1)
+            elif self.is_moving and (self.velocity[0] >= 0) and (ypos + 1 <= grid_size[0]) and (xpos + 1 <= grid_size[1]) and (grid[ypos + 1][xpos + 1].state != 3) and (grid[ypos + 1][xpos + 1].density < self.density): #moze sa hybat a dole napravo nieje blok
+                if (random.randint(0, 100)) < (self.friction * 100): #prestava sa smikat
+                    self.velocity = (move_to_num(self.velocity[0], 0, 1), move_to_num(self.velocity[0], 0, 1))
                 else:
-                    self.velocity = (self.velocity[0], self.velocity[0])
+                    if (self.velocity[0] == 0) and (random.randint(0, 100) > (self.friction * 100)):
+                        self.velocity = (1, 1)
+                    else:
+                        self.velocity = (self.velocity[0], self.velocity[0])
 
-        elif self.is_moving and (self.velocity[0] <= 0) and (ypos + 1 <= grid_size[0]) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3) and (grid[ypos + 1][xpos - 1].density < self.density): #moze sa hybat a dole nalavo nieje blok
-            if (random.randint(0, 100)) < (self.friction * 100): #prestava sa smikat
-                self.velocity = (move_to_num(self.velocity[0], 0, 1), abs(move_to_num(self.velocity[0], 0, 1)))
-            else:
-                if (self.velocity[0] == 0) and (random.randint(0, 100) > (self.friction * 100)):
-                    self.velocity = (-1, 1)
+            elif self.is_moving and (self.velocity[0] <= 0) and (ypos + 1 <= grid_size[0]) and (xpos - 1 >= 0) and (grid[ypos + 1][xpos - 1].state != 3) and (grid[ypos + 1][xpos - 1].density < self.density): #moze sa hybat a dole nalavo nieje blok
+                if (random.randint(0, 100)) < (self.friction * 100): #prestava sa smikat
+                    self.velocity = (move_to_num(self.velocity[0], 0, 1), abs(move_to_num(self.velocity[0], 0, 1)))
                 else:
-                    self.velocity = (self.velocity[0], abs(self.velocity[0]))
-
-        elif (self.state < 3): #moze sa hybat a nieje pevny
-            if (self.velocity[0] >= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide doprava a napravo nieje blok
-                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
-                    self.velocity = (self.velocity[0] + 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                    if (self.velocity[0] == 0) and (random.randint(0, 100) > (self.friction * 100)):
+                        self.velocity = (-1, 1)
+                    else:
+                        self.velocity = (self.velocity[0], abs(self.velocity[0]))
+            
+            elif (self.state == 2) or ((random.randint(0, 100) - random.randint(0, 100)) > (self.friction * 100) and self.is_moving): #je tekutina
+                if (self.velocity[0] >= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide doprava a napravo nieje blok
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (self.velocity[0] + 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+                elif (self.velocity[0] >= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide doprava ale napravo je blok = odrazi sa
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (-1, 0)
+                elif (self.velocity[0] <= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide dolava a nalavo nieje blok
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (self.velocity[0] - 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+                elif (self.velocity[0] <= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide dolava ale nalavo je blok = odrazi sa
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (1, 0)
                 else:
-                    self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
-            elif (self.velocity[0] >= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide doprava ale napravo je blok = odrazi sa
-                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
-                    self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
-                else:
-                    self.velocity = (-1, 0)
-            elif (self.velocity[0] <= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density < self.density): #ide dolava a nalavo nieje blok
-                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
-                    self.velocity = (self.velocity[0] - 1, round(move_to_num(self.velocity[1], 0, 2, True)))
-                else:
-                    self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
-            elif (self.velocity[0] <= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density < self.density): #ide dolava ale nalavo je blok = odrazi sa
-                if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
-                    self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
-                else:
-                    self.velocity = (1, 0)
-            else:
+                    self.velocity = (0, 0)
+                
+            else: #nemoze sa hybat (aj ked ma velocity)
                 self.velocity = (0, 0)
+                self.is_moving = False
+                return
+        
+        elif self.state == 1: #je plyn
+            if (ypos - 1 >= 0) and (grid[ypos - 1][xpos].density > self.density):
+                if random.randint(0, 100) < (self.friction * 100): #prestava sa smikat
+                    self.velocity = (round(move_to_num(self.velocity[0], 0, 2, True)), self.velocity[1] - environment["gravity"])
+                else: #smika sa = zachova svoj pohyb do boku
+                    self.velocity = (self.velocity[0], self.velocity[1] - environment["gravity"])
+            else:
+                if (self.velocity[0] >= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density > self.density): #ide doprava a napravo nieje blok
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (self.velocity[0] + 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+                elif (self.velocity[0] >= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density > self.density): #ide doprava ale napravo je blok = odrazi sa
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (-1, 0)
+                elif (self.velocity[0] <= 0) and (xpos - 1 >= 0) and (grid[ypos][xpos - 1].density > self.density): #ide dolava a nalavo nieje blok
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (self.velocity[0] - 1, round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (self.velocity[0], round(move_to_num(self.velocity[1], 0, 2, True)))
+                elif (self.velocity[0] <= 0) and (xpos + 1 <= grid_size[1]) and (grid[ypos][xpos + 1].density > self.density): #ide dolava ale nalavo je blok = odrazi sa
+                    if (random.randint(0, 100)) > (self.friction * 100): #smika sa viac
+                        self.velocity = (round(-self.velocity[0] / 2), round(move_to_num(self.velocity[1], 0, 2, True)))
+                    else:
+                        self.velocity = (1, 0)
+                else:
+                    self.velocity = (0, 0)
 
         else: #nemoze sa hybat (aj ked ma velocity)
             self.velocity = (0, 0)
@@ -97,26 +133,24 @@ class Block:
         if self.velocity == (0, 0): #nema velocity = nemoze sa hybat
             self.is_moving = False
             return
-        
-        # print("vel", self.velocity)
 
         # ----- pohyb -----
         next_positions = self.calc_pos_check((xpos, ypos), (xpos + self.velocity[0], ypos + self.velocity[1]))
-        # print("next pos", next_positions)
-        if not self.has_moved and self.velocity[0] == 0: # iba dole
+        
+        if not self.has_moved and self.velocity[0] == 0: # iba dole a hore
             for next_pos in next_positions:
-                if ypos + next_pos[1] <= grid_size[0]: #je dole grid
-                    if (self.state < 3) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina alebo plyn a pod nim je blok s mensiou hustotou
+                if (ypos + next_pos[1] <= grid_size[0]) and (ypos + next_pos[1] >= 0): #je dole a hore grid
+                    if (self.state == 1) and (grid[ypos + next_pos[1]][xpos].density > self.density): #je plyn a nad nim je blok s vacsiou hustotou
+                        final_pos = next_pos
+                    elif (self.state == 2) and (grid[ypos + next_pos[1]][xpos].density < self.density): #je tekutina a pod nim je blok s mensiou hustotou
                         final_pos = next_pos
                     elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos].state != 3): #je pevny a nie je pod nim pevny blok
                         final_pos = next_pos
                     else: #dopadol
                         self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
-                        # print("dopadol", self.velocity)
                         break
-                else: #dopadol na spodok gridu
+                else: #dopadol na spodok alebo vrch gridu
                     self.velocity = ((math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
-                    # print("dopadol g", self.velocity)
                     break
                 for adjpos in close_adjacent:
                     if not (xpos + next_pos[0] + adjpos[1] <= grid_size[1]) or not (xpos + next_pos[0] + adjpos[1] >= 0) or not (ypos + next_pos[1] + adjpos[0] <= grid_size[0]) or not (ypos + next_pos[1] + adjpos[0] >= 0): #ak neni v gridu = skip
@@ -129,29 +163,24 @@ class Block:
             except UnboundLocalError:
                 if self.velocity == (0, 0):
                     return
-                    # print("stop")
-                else:
-                    pass
-                    # print("no stop")
 
         elif not self.has_moved: # krivo dole
             for next_pos in next_positions:
-                if (ypos + next_pos[1] <= grid_size[0]) and (xpos + next_pos[0] <= grid_size[1]) and (xpos + next_pos[0] >= 0): #je v gride
-                    if (self.state < 3) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].density < self.density): #je tekutina alebo plyn a dalsi blok ma mensiu hustotu
+                if (ypos + next_pos[1] <= grid_size[0]) and (ypos + next_pos[1] >= 0) and (xpos + next_pos[0] <= grid_size[1]) and (xpos + next_pos[0] >= 0): #je v gride
+                    if (self.state == 1) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].density > self.density): #je plyn a dalsi blok ma vacsiu hustotu
+                        final_pos = next_pos
+                    elif (self.state == 2) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].density < self.density): #je tekutina a dalsi blok ma mensiu hustotu
                         final_pos = next_pos
                     elif (self.state == 3) and (grid[ypos + next_pos[1]][xpos + next_pos[0]].state != 3): #je pevny a dalsi blok nie je pevny blok
                         final_pos = next_pos
                     else: #dopadol
                         self.velocity = ((self.velocity[0] + math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
-                        # print("dopadol2", self.velocity)
                         break
                 elif ((xpos + next_pos[0] > grid_size[1]) or (xpos + next_pos[0] < 0)): #napravo alebo nalavo neni grid
                     self.velocity = (0, self.velocity[1])
-                    # print("odraz", self.velocity)
                     break
-                else: #dopadol na spodok gridu
+                else: #dopadol na spodok alebo vrch gridu
                     self.velocity = ((self.velocity[0] + math.floor(self.velocity[1] / (1 / max(1 - self.friction, 0.01))) * random.choice((-1, 1)), 0))
-                    # print("dopadol2 g", self.velocity)
                     break
                 for adjpos in close_adjacent:
                     if not (xpos + next_pos[0] + adjpos[1] <= grid_size[1]) or not (xpos + next_pos[0] + adjpos[1] >= 0) or not (ypos + next_pos[1] + adjpos[0] <= grid_size[0]) or not (ypos + next_pos[1] + adjpos[0] >= 0): #ak neni v gridu = skip
@@ -164,10 +193,6 @@ class Block:
             except UnboundLocalError:
                 if self.velocity == (0, 0):
                     return
-                    # print("stop2")
-                else:
-                    pass
-                    # print("no stop")
         
     def action(self, grid, xpos, ypos, environment):
         grid_size = (len(grid) - 1, len(grid[0]) - 1) #[0] = y height, [1] = x width

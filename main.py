@@ -45,7 +45,7 @@ down_button = utils.Button(True, down_arrow, (WIDTH - down_arrow.get_width(), HE
 # print(HEIGHT - ((HEIGHT_S // 10) * SCALE))
 
 environment = {
-    "temperature": 90,
+    "temperature": 50,
     "gravity": 1
 }
 env_i = 0
@@ -118,6 +118,7 @@ while True:
         info_texts = [str(f"ID: {block_types[hovered_block]["id"]}\n"),
                       str(f"Density: {block_types[hovered_block]["density"]}"),
                       str(f"Temperature: {"%.2f" % logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].temperature} °C"),
+                      str(f"State: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].state}"),
                       str(f"Is moving: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].is_moving}"),
                       str(f"Velocity: {logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]].velocity}")
                       ]
