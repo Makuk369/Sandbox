@@ -66,10 +66,12 @@ for block_icon, block_type in zip(block_icons, block_types):
         xpos += (WIDTH - 40) / 3
         ypos = 20
 
+is_LShift_held = False
 is_mouseL_held = False
 is_mouseR_held = False
 is_block_menu_open = False
 variant = block_types[selected_block]["id"]
+brush_size = 1
 
 while True:
     
@@ -103,11 +105,16 @@ while True:
     mouse_pos_s = (mouse_pos[0] // SCALE, mouse_pos[1] // SCALE)
     # print(mouse_pos_s)
 
-    if not is_block_menu_open and (0 <= mouse_pos_s[0] <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] <= logic_grid.height - 1):
-        pygame.draw.rect(surface_ui, (204, 190, 184), (mouse_pos_s[0] * SCALE, mouse_pos_s[1] * SCALE, SCALE, SCALE), 1)
+    #----- Pokladanie Blokov -----
+    if not is_block_menu_open and (0 <= mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
+        pygame.draw.rect(surface_ui, (204, 190, 184), (mouse_pos_s[0] * SCALE, mouse_pos_s[1] * SCALE, SCALE * brush_size, SCALE * brush_size), 1)
 
-    if is_mouseL_held and not is_block_menu_open and (0 <= mouse_pos_s[0] <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] <= logic_grid.height - 1):
-        logic_grid.grid[mouse_pos_s[1]][mouse_pos_s[0]] = Block(block_types[selected_block])
+    if is_mouseL_held and not is_block_menu_open and (0 <= mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
+        y = -1
+        for x in range(brush_size * brush_size):
+            if x % brush_size == 0:
+                y += 1
+            logic_grid.grid[mouse_pos_s[1] + y][mouse_pos_s[0] + (x - brush_size * y)] = Block(block_types[selected_block])
         # print("NEW BLOCK")
     
     if is_mouseR_held and not is_block_menu_open and (0 <= mouse_pos_s[0] <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] <= logic_grid.height - 1):
@@ -151,12 +158,20 @@ while True:
                 ypos += 20  
 
     for event in pygame.event.get():
+        # print(event)
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LSHIFT:
+                is_LShift_held = True
+        
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LSHIFT:
+                is_LShift_held = False
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            #print(event)
             if event.button == 1: # mouse L
                 is_mouseL_held = True
 
@@ -180,11 +195,17 @@ while True:
             if event.button == 2: # mouse mid
                 GAME_SPEED = 1
             if event.button == 4:
-                variant -= 1
-                selected_block = list(block_types.keys())[variant % len(block_types)]
+                if is_LShift_held: #brush size down
+                    brush_size = max(brush_size - 1, 1)
+                else:
+                    variant -= 1
+                    selected_block = list(block_types.keys())[variant % len(block_types)]
             if event.button == 5:
-                variant += 1
-                selected_block = list(block_types.keys())[variant % len(block_types)]
+                if is_LShift_held: #brush size up
+                    brush_size += 1
+                else:
+                    variant += 1
+                    selected_block = list(block_types.keys())[variant % len(block_types)]
     
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
