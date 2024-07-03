@@ -106,10 +106,10 @@ while True:
     # print(mouse_pos_s)
 
     #----- Pokladanie Blokov -----
-    if not is_block_menu_open and (0 <= mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
+    if not is_block_menu_open and (0 <= mouse_pos_s[0]) and (mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1]) and (mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
         pygame.draw.rect(surface_ui, (204, 190, 184), (mouse_pos_s[0] * SCALE, mouse_pos_s[1] * SCALE, SCALE * brush_size, SCALE * brush_size), 1)
 
-    if is_mouseL_held and not is_block_menu_open and (0 <= mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
+    if is_mouseL_held and not is_block_menu_open and (0 <= mouse_pos_s[0]) and (mouse_pos_s[0] + brush_size - 1 <= logic_grid.width - 1) and (0 <= mouse_pos_s[1]) and (mouse_pos_s[1] + brush_size - 1 <= logic_grid.height - 1):
         y = -1
         for x in range(brush_size * brush_size):
             if x % brush_size == 0:
