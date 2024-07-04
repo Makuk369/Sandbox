@@ -8,12 +8,13 @@ block_types = load_from_json("blockdata.json")
 close_adjacent = ((-1, 0), (0, 1), (1, 0), (0, -1)) #y, x
 
 class Block:
-    def __init__(self, block_type: dict) -> None:
+    def __init__(self, block_type: dict, temperature = 0) -> None:
         self.id = block_type["id"]
         if type(block_type["color"][1]) == int: #zisti ci je blok grayscale
             self.color = get_color_from_range(block_type["color"], True)
         else:
             self.color = get_color_from_range(block_type["color"])
+        
         self.density = block_type["density"]
         if self.density < 500:
             self.state = 1 #plyn
@@ -21,9 +22,13 @@ class Block:
             self.state = 2 #tekutina
         else:
             self.state = 3 #pevne
-        self.temperature = block_type["temperature"]
+        
+        if temperature == 0:
+            self.temperature = block_type["temperature"]
+        else:
+            self.temperature = temperature
         self.thermal_conductivity = block_type["thermal_conductivity"]
-        self.state_changes = (block_type["melting_temp"], block_type["freezing_temp"])
+        self.temp_changes = (block_type["melting_temp"], block_type["freezing_temp"])
         self.velocity = (0, 0) # X, Y
         self.friction = block_type["friction"]
         self.bounciness = block_type["bounciness"]
@@ -230,16 +235,16 @@ class Block:
             for chtag in self.changesto.keys(): #ked ovplivnuje seba
                 chtag = int(chtag)
                 if not self.has_made_action and (tag == 1) and (tag == chtag): #stuhnutie
-                    if (self.state_changes[1] != None) and (self.temperature < self.state_changes[1]):
+                    if (self.temp_changes[1] != None) and (self.temperature < self.temp_changes[1]):
                         new_block = Block(block_types[self.changesto[str(chtag)]])
-                        new_block.temperature = environment["temperature"]
+                        new_block.temperature = self.temperature - 1
                         grid[ypos][xpos] = new_block
                         self.has_made_action = True
                 
                 elif not self.has_made_action and (tag == 2) and (tag == chtag): #rozpustanie
-                    if (self.state_changes[0] != None) and (self.temperature > self.state_changes[0]):
+                    if (self.temp_changes[0] != None) and (self.temperature > self.temp_changes[0]):
                         new_block = Block(block_types[self.changesto[str(chtag)]])
-                        new_block.temperature = environment["temperature"]
+                        new_block.temperature = self.temperature + 1
                         grid[ypos][xpos] = new_block
                         self.has_made_action = True
 

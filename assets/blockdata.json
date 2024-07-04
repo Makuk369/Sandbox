@@ -6,7 +6,7 @@
         ],
         "density": 10,
         "temperature": 20,
-        "thermal_conductivity": 5,
+        "thermal_conductivity": 100,
         "melting_temp": null,
         "freezing_temp": null,
         "can_move": false,
@@ -75,7 +75,7 @@
         "color": [
             [193, 201], [167, 179], [45, 65], 255
         ],
-        "density": 1600,
+        "density": 1700,
         "temperature": 12,
         "thermal_conductivity": 40,
         "melting_temp": null,
@@ -91,7 +91,7 @@
         "color": [
             [75, 90], [210, 225], [250, 255], 255
         ],
-        "density": 2500,
+        "density": 2000,
         "temperature": -1,
         "thermal_conductivity": 15,
         "melting_temp": 0,
@@ -125,5 +125,61 @@
         "changesto": {
             "1": "water"
         }
+    },
+    "fire": {
+        "id": 7,
+        "color": [
+            [250, 255], [70, 240], [10, 100], 255
+        ],
+        "density": 500,
+        "temperature": 500,
+        "thermal_conductivity": 1,
+        "melting_temp": null,
+        "freezing_temp": 50,
+        "can_move": true,
+        "friction": 0.9,
+        "bounciness": 0.5,
+        "actiontags": [
+            1
+        ],
+        "changesto": {
+            "1": "air"
+        }
+    },
+    "wood": {
+        "id": 8,
+        "color": [
+            [150, 160], [120, 121], [70, 71], 255
+        ],
+        "density": 1650,
+        "temperature": 20,
+        "thermal_conductivity": 80,
+        "melting_temp": 400,
+        "freezing_temp": null,
+        "can_move": false,
+        "friction": 1,
+        "bounciness": 0,
+        "actiontags": [
+            2
+        ],
+        "changesto": {
+            "2": "ash"
+        }
+    },
+    "ash": {
+        "id": 9,
+        "color": [
+            [120, 130], [125, 135], [125, 135], 255
+        ],
+        "density": 1525,
+        "temperature": 20,
+        "thermal_conductivity": 65,
+        "melting_temp": null,
+        "freezing_temp": null,
+        "can_move": true,
+        "friction": 0.25,
+        "bounciness": 0.15,
+        "actiontags": [],
+        "changesto": {}
     }
 }

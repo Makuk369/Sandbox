@@ -54,7 +54,7 @@ selected_block = "sand"
 
 block_types = utils.load_from_json("blockdata.json")
 
-logic_grid = LogicGrid(WIDTH_S, HEIGHT_S - (HEIGHT_S // 10), Block(block_types["air"])) #127, 63
+logic_grid = LogicGrid(WIDTH_S, HEIGHT_S - (HEIGHT_S // 10), block_types["air"], environment["temperature"]) #127, 63
 
 block_buttons = []
 xpos = 20
